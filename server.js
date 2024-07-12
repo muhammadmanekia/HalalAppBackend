@@ -27,6 +27,21 @@ const restaurantSchema = new mongoose.Schema({
 
 const categoryImageSchema = new mongoose.Schema({}, { strict: false });
 
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 3959; // Radius of the Earth in miles
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = R * c; // Distance in miles
+  return distance;
+}
+
 const Restaurant = mongoose.model(
   "Restaurant",
   restaurantSchema,
@@ -39,9 +54,17 @@ const CategoryImage = mongoose.model(
 );
 
 app.get("/category-images", async (req, res) => {
+  const { categories } = req.query;
+
   try {
     const categoryImages = await CategoryImage.findOne({});
-    res.json(categoryImages);
+    const relevantCategoryImages = Object.fromEntries(
+      Object.entries(categoryImages).filter(([category]) =>
+        categories.includes(category)
+      )
+    );
+
+    res.json(relevantCategoryImages);
   } catch (error) {
     console.error("Error fetching category images:", error);
     res.status(500).send("Error fetching category images");
@@ -49,11 +72,32 @@ app.get("/category-images", async (req, res) => {
 });
 
 app.get("/restaurants", async (req, res) => {
+  const { latitude, longitude, radius = 20 } = req.query;
+
   try {
-    const restaurants = await Restaurant.find();
-    res.json(restaurants);
+    const allRestaurants = await Restaurant.find();
+
+    if (latitude && longitude) {
+      const filteredRestaurants = allRestaurants
+        .map((restaurant) => {
+          const distance = calculateDistance(
+            parseFloat(latitude),
+            parseFloat(longitude),
+            restaurant.coordinates.latitude,
+            restaurant.coordinates.longitude
+          );
+          return { ...restaurant.toObject(), distance };
+        })
+        .filter((restaurant) => restaurant.distance <= radius)
+        .sort((a, b) => a.distance - b.distance);
+
+      res.json(filteredRestaurants);
+    } else {
+      res.json(allRestaurants);
+    }
   } catch (error) {
-    res.status(500).send(error);
+    console.error("Error fetching restaurants:", error);
+    res.status(500).send("Error fetching restaurants");
   }
 });
 
