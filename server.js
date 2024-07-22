@@ -1,6 +1,8 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 const app = express();
@@ -25,7 +27,14 @@ const restaurantSchema = new mongoose.Schema({
   time: String,
 });
 
+const userSchema = new mongoose.Schema({
+  name: String,
+  email: { type: String, unique: true },
+  password: String,
+});
+
 const categoryImageSchema = new mongoose.Schema({}, { strict: false });
+const User = mongoose.model("User", userSchema, "Users");
 
 function calculateDistance(lat1, lon1, lat2, lon2) {
   const R = 3959; // Radius of the Earth in miles
@@ -52,6 +61,63 @@ const CategoryImage = mongoose.model(
   categoryImageSchema,
   "CategoryImages"
 );
+
+// Middleware to authenticate the token
+const authenticateToken = (req, res, next) => {
+  const token = req.headers["authorization"];
+  if (!token) return res.sendStatus(401);
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.sendStatus(403);
+    req.user = user;
+    next();
+  });
+};
+
+app.post("/register", async (req, res) => {
+  const { name, email, password } = req.body;
+  console.log(req.body);
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = new User({ name, email, password: hashedPassword });
+    await user.save();
+    const token = jwt.sign(
+      { id: user._id, name: user.name, email: user.email },
+      process.env.JWT_SECRET
+    );
+
+    res.status(201).json({ token });
+  } catch (error) {
+    console.error("Error registering user:", error);
+    res.status(500).send("Error registering user");
+  }
+});
+
+app.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).send("Invalid email or password");
+
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword)
+      return res.status(400).send("Invalid email or password");
+
+    const token = jwt.sign(
+      { id: user._id, name: user.name, email: user.email },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "10h",
+      }
+    );
+
+    res.json({ token, name: user.name, email: user.email });
+  } catch (error) {
+    console.error("Error logging in user:", error);
+    res.status(500).send("Error logging in user");
+  }
+});
 
 app.get("/category-images", async (req, res) => {
   const { categories } = req.query;
