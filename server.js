@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+// const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 
@@ -19,7 +20,20 @@ function hashPassword(password) {
 }
 
 function comparePassword(password, hash) {
+  if (!password || !hash) {
+    console.error("comparePassword called with invalid arguments:", {
+      password,
+      hash,
+    });
+    return false;
+  }
+
   const [salt, key] = hash.split(":");
+  if (!salt || !key) {
+    console.error("Invalid hash format:", hash);
+    return false;
+  }
+
   const hashBuffer = crypto.pbkdf2Sync(password, salt, 100000, 64, "sha512");
   return crypto.timingSafeEqual(Buffer.from(key, "hex"), hashBuffer);
 }
