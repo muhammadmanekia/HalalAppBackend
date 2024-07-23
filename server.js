@@ -105,7 +105,7 @@ app.post("/register", async (req, res) => {
     res.status(201).json({ token });
   } catch (error) {
     console.error("Error registering user:", error);
-    res.status(500).send("Error registering user");
+    res.status(500).send(error);
   }
 });
 
@@ -131,7 +131,7 @@ app.post("/login", async (req, res) => {
     res.json({ token, name: user.name, email: user.email });
   } catch (error) {
     console.error("Error logging in user:", error);
-    res.status(500).send("Error logging in user");
+    res.status(500).send(error);
   }
 });
 
