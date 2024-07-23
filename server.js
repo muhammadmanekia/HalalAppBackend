@@ -1,7 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-// const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 
@@ -105,7 +104,7 @@ app.post("/register", async (req, res) => {
     res.status(201).json({ token });
   } catch (error) {
     console.error("Error registering user:", error);
-    res.status(500).send(error);
+    res.status(500).json({ error: error.message, stack: error.stack });
   }
 });
 
@@ -114,11 +113,12 @@ app.post("/login", async (req, res) => {
 
   try {
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).send("Invalid email or password");
+    if (!user)
+      return res.status(400).json({ error: "Invalid email or password" });
 
     const validPassword = comparePassword(password, user.password);
     if (!validPassword)
-      return res.status(400).send("Invalid email or password");
+      return res.status(400).json({ error: "Invalid email or password" });
 
     const token = jwt.sign(
       { id: user._id, name: user.name, email: user.email },
@@ -131,7 +131,7 @@ app.post("/login", async (req, res) => {
     res.json({ token, name: user.name, email: user.email });
   } catch (error) {
     console.error("Error logging in user:", error);
-    res.status(500).send(error);
+    res.status(500).json({ error: error.message, stack: error.stack });
   }
 });
 
@@ -149,7 +149,7 @@ app.get("/category-images", async (req, res) => {
     res.json(relevantCategoryImages);
   } catch (error) {
     console.error("Error fetching category images:", error);
-    res.status(500).send("Error fetching category images");
+    res.status(500).json({ error: error.message, stack: error.stack });
   }
 });
 
@@ -179,7 +179,7 @@ app.get("/restaurants", async (req, res) => {
     }
   } catch (error) {
     console.error("Error fetching restaurants:", error);
-    res.status(500).send("Error fetching restaurants");
+    res.status(500).json({ error: error.message, stack: error.stack });
   }
 });
 
