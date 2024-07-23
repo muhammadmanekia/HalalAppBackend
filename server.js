@@ -3,11 +3,27 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 // const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
+
 require("dotenv").config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString("hex");
+  const hash = crypto
+    .pbkdf2Sync(password, salt, 100000, 64, "sha512")
+    .toString("hex");
+  return `${salt}:${hash}`;
+}
+
+function comparePassword(password, hash) {
+  const [salt, key] = hash.split(":");
+  const hashBuffer = crypto.pbkdf2Sync(password, salt, 100000, 64, "sha512");
+  return crypto.timingSafeEqual(Buffer.from(key, "hex"), hashBuffer);
+}
 
 const mongoURI = process.env.MONGO_URI;
 mongoose
@@ -78,7 +94,7 @@ app.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
   console.log(req.body);
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = hashPassword(password);
     const user = new User({ name, email, password: hashedPassword });
     await user.save();
     const token = jwt.sign(
@@ -100,7 +116,7 @@ app.post("/login", async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(400).send("Invalid email or password");
 
-    const validPassword = await bcrypt.compare(password, user.password);
+    const validPassword = comparePassword(password, user.password);
     if (!validPassword)
       return res.status(400).send("Invalid email or password");
 
