@@ -16,7 +16,6 @@ app.use(
       "http://env-0305763.atl.jelastic.vps-host.net/",
     ],
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-    credentials: true,
   })
 );
 app.use(express.json());
