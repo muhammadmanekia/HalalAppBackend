@@ -9,15 +9,7 @@ require("dotenv").config();
 
 const app = express();
 const cors = require("cors");
-app.use(
-  cors({
-    origin: [
-      "http://localhost:3000",
-      "http://env-0305763.atl.jelastic.vps-host.net/",
-    ],
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-  })
-);
+app.use(cors());
 app.use(express.json());
 
 function hashPassword(password) {
