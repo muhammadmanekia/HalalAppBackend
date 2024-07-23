@@ -8,7 +8,17 @@ const crypto = require("crypto");
 require("dotenv").config();
 
 const app = express();
-app.use(cors());
+const cors = require("cors");
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "http://env-0305763.atl.jelastic.vps-host.net/",
+    ],
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 function hashPassword(password) {
