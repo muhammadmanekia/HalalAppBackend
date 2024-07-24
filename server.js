@@ -212,34 +212,33 @@ app.get("/restaurants", async (req, res) => {
   }
 });
 
-// Post a review
+// Add authenticateToken to the reviews POST endpoint
 app.post(
   "/restaurants/:restaurantId/reviews",
   authenticateToken,
   async (req, res) => {
     const { restaurantId } = req.params;
-    const { rating, comment } = req.body;
-    const userId = req.user.id;
+    const { rating, title, comment } = req.body;
+    const userId = req.user.id; // assuming user ID is in the token payload
 
     try {
       const restaurant = await Restaurant.findById(restaurantId);
-      if (!restaurant) {
-        return res.status(404).json({ error: "Restaurant not found" });
-      }
+      if (!restaurant) return res.status(404).send("Restaurant not found");
 
-      const review = new Review({
-        user: userId,
+      const review = {
+        userId,
         rating,
+        title,
         comment,
-      });
+        date: new Date(),
+      };
 
       restaurant.reviews.push(review);
       await restaurant.save();
-
       res.status(201).json(review);
     } catch (error) {
       console.error("Error posting review:", error);
-      res.status(500).json({ error: error.message, stack: error.stack });
+      res.status(500).send("Error posting review");
     }
   }
 );
