@@ -1,7 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-// const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 
@@ -10,6 +9,13 @@ require("dotenv").config();
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+console.log("JWT_SECRET:", process.env.JWT_SECRET);
+console.log("MONGO_URI:", process.env.MONGO_URI);
+
+if (!process.env.JWT_SECRET) {
+  throw new Error("JWT_SECRET environment variable is not set");
+}
 
 function hashPassword(password) {
   const salt = crypto.randomBytes(16).toString("hex");
@@ -44,6 +50,13 @@ mongoose
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
+const reviewSchema = new mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  rating: { type: Number, required: true, min: 1, max: 5 },
+  comment: { type: String, required: true },
+  date: { type: Date, default: Date.now },
+});
+
 const restaurantSchema = new mongoose.Schema({
   name: String,
   address: String,
@@ -54,6 +67,7 @@ const restaurantSchema = new mongoose.Schema({
   coordinates: Object,
   quickFacts: Array,
   time: String,
+  reviews: [reviewSchema], // Add reviews to restaurant schema
 });
 
 const userSchema = new mongoose.Schema({
@@ -64,6 +78,17 @@ const userSchema = new mongoose.Schema({
 
 const categoryImageSchema = new mongoose.Schema({}, { strict: false });
 const User = mongoose.model("User", userSchema, "Users");
+const Restaurant = mongoose.model(
+  "Restaurant",
+  restaurantSchema,
+  "Restaurants"
+);
+const Review = mongoose.model("Review", reviewSchema);
+const CategoryImage = mongoose.model(
+  "CategoryImages",
+  categoryImageSchema,
+  "CategoryImages"
+);
 
 function calculateDistance(lat1, lon1, lat2, lon2) {
   const R = 3959; // Radius of the Earth in miles
@@ -79,17 +104,6 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   const distance = R * c; // Distance in miles
   return distance;
 }
-
-const Restaurant = mongoose.model(
-  "Restaurant",
-  restaurantSchema,
-  "Restaurants"
-);
-const CategoryImage = mongoose.model(
-  "CategoryImages",
-  categoryImageSchema,
-  "CategoryImages"
-);
 
 // Middleware to authenticate the token
 const authenticateToken = (req, res, next) => {
@@ -193,6 +207,58 @@ app.get("/restaurants", async (req, res) => {
     }
   } catch (error) {
     console.error("Error fetching restaurants:", error);
+    res.status(500).json({ error: error.message, stack: error.stack });
+  }
+});
+
+// Post a review
+app.post(
+  "/restaurants/:restaurantId/reviews",
+  authenticateToken,
+  async (req, res) => {
+    const { restaurantId } = req.params;
+    const { rating, comment } = req.body;
+    const userId = req.user.id;
+
+    try {
+      const restaurant = await Restaurant.findById(restaurantId);
+      if (!restaurant) {
+        return res.status(404).json({ error: "Restaurant not found" });
+      }
+
+      const review = new Review({
+        user: userId,
+        rating,
+        comment,
+      });
+
+      restaurant.reviews.push(review);
+      await restaurant.save();
+
+      res.status(201).json(review);
+    } catch (error) {
+      console.error("Error posting review:", error);
+      res.status(500).json({ error: error.message, stack: error.stack });
+    }
+  }
+);
+
+// Get reviews for a restaurant
+app.get("/restaurants/:restaurantId/reviews", async (req, res) => {
+  const { restaurantId } = req.params;
+
+  try {
+    const restaurant = await Restaurant.findById(restaurantId).populate(
+      "reviews.user",
+      "name"
+    );
+    if (!restaurant) {
+      return res.status(404).json({ error: "Restaurant not found" });
+    }
+
+    res.json(restaurant.reviews);
+  } catch (error) {
+    console.error("Error fetching reviews:", error);
     res.status(500).json({ error: error.message, stack: error.stack });
   }
 });
