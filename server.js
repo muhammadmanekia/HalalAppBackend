@@ -108,11 +108,13 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 
 // Middleware to authenticate the token
 const authenticateToken = (req, res, next) => {
-  const token = req.headers["authorization"];
-  if (!token) return res.sendStatus(401);
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+
+  if (!token) return res.sendStatus(401); // No token provided
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) return res.sendStatus(403);
+    if (err) return res.sendStatus(403); // Token is not valid
     req.user = user;
     next();
   });
@@ -244,24 +246,41 @@ app.post(
 );
 
 // Get reviews for a restaurant
-app.get("/restaurants/:restaurantId/reviews", async (req, res) => {
-  const { restaurantId } = req.params;
+app.post(
+  "/restaurants/:restaurantId/reviews",
+  authenticateToken,
+  async (req, res) => {
+    const { _id } = req.params;
+    const { rating, title, comment } = req.body;
+    const userId = req.user.id;
 
-  try {
-    const restaurant = await Restaurant.findById(restaurantId).populate(
-      "reviews.user",
-      "name"
-    );
-    if (!restaurant) {
-      return res.status(404).json({ error: "Restaurant not found" });
+    if (!rating || !title || !comment) {
+      return res.status(400).send("Rating, title, and comment are required");
     }
 
-    res.json(restaurant.reviews);
-  } catch (error) {
-    console.error("Error fetching reviews:", error);
-    res.status(500).json({ error: error.message, stack: error.stack });
+    try {
+      const restaurant = await Restaurant.findById(_id);
+      if (!restaurant) {
+        return res.status(404).send("Restaurant not found");
+      }
+
+      const review = {
+        userId,
+        rating,
+        title,
+        comment,
+        date: new Date(),
+      };
+
+      restaurant.reviews.push(review);
+      await restaurant.save();
+      res.status(201).json(review);
+    } catch (error) {
+      console.error("Error posting review:", error);
+      res.status(500).send("Error posting review");
+    }
   }
-});
+);
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
