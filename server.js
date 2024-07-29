@@ -53,7 +53,6 @@ mongoose
 const reviewSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   rating: { type: Number, required: true, min: 1, max: 5 },
-  title: { type: String, required: true },
   comment: { type: String, required: true },
   date: { type: Date, default: Date.now },
 });
@@ -161,7 +160,7 @@ app.post("/login", async (req, res) => {
       process.env.JWT_SECRET
     );
 
-    res.json({ token, name: user.name, email: user.email });
+    res.json({ token, id: user._id, name: user.name, email: user.email });
   } catch (error) {
     console.error("Error logging in user:", error);
     res.status(500).json({ error: error.message, stack: error.stack });
@@ -222,17 +221,15 @@ app.post(
   authenticateToken,
   async (req, res) => {
     const { restaurantId } = req.params;
-    const { rating, title, comment } = req.body;
-    const userId = req.user.id; // assuming user ID is in the token payload
+    const { rating, user, comment } = req.body;
 
     try {
       const restaurant = await Restaurant.findById(restaurantId);
       if (!restaurant) return res.status(404).send("Restaurant not found");
 
       const review = {
-        userId,
+        user,
         rating,
-        title,
         comment,
         date: new Date(),
       };
@@ -253,8 +250,7 @@ app.post(
   authenticateToken,
   async (req, res) => {
     const { _id } = req.params;
-    const { rating, title, comment } = req.body;
-    const userId = req.user.id;
+    const { rating, comment, user } = req.body;
 
     if (!rating || !title || !comment) {
       return res.status(400).send("Rating, title, and comment are required");
@@ -267,9 +263,8 @@ app.post(
       }
 
       const review = {
-        userId,
+        user,
         rating,
-        title,
         comment,
         date: new Date(),
       };
