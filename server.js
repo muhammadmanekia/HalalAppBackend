@@ -114,7 +114,12 @@ const authenticateToken = (req, res, next) => {
   if (!token) return res.sendStatus(401); // No token provided
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) return res.sendStatus(403); // Token is not valid
+    console.log(token);
+    console.log(process.env.JWT_SECRET);
+    if (err) {
+      console.log(err);
+      return res.sendStatus(403);
+    } // Token is not valid
     req.user = user;
     next();
   });
@@ -153,10 +158,7 @@ app.post("/login", async (req, res) => {
 
     const token = jwt.sign(
       { id: user._id, name: user.name, email: user.email },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "10h",
-      }
+      process.env.JWT_SECRET
     );
 
     res.json({ token, name: user.name, email: user.email });
