@@ -245,39 +245,20 @@ app.post(
 );
 
 // Get reviews for a restaurant
-app.post(
-  "/restaurants/:restaurantId/reviews",
-  authenticateToken,
-  async (req, res) => {
-    const { _id } = req.params;
-    const { rating, comment, user } = req.body;
-
-    if (!rating || !title || !comment) {
-      return res.status(400).send("Rating, title, and comment are required");
+app.get("/restaurants/:id/reviews", async (req, res) => {
+  try {
+    const restaurant = await Restaurant.findById(req.params.id).populate(
+      "reviews.user",
+      "name"
+    ); // Populate user field if you want to include user details
+    if (!restaurant) {
+      return res.status(404).json({ error: "Restaurant not found." });
     }
-
-    try {
-      const restaurant = await Restaurant.findById(_id);
-      if (!restaurant) {
-        return res.status(404).send("Restaurant not found");
-      }
-
-      const review = {
-        user,
-        rating,
-        comment,
-        date: new Date(),
-      };
-
-      restaurant.reviews.push(review);
-      await restaurant.save();
-      res.status(201).json(review);
-    } catch (error) {
-      console.error("Error posting review:", error);
-      res.status(500).send("Error posting review");
-    }
+    res.json(restaurant.reviews);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
-);
+});
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
