@@ -67,6 +67,7 @@ const restaurantSchema = new mongoose.Schema({
   coordinates: Object,
   quickFacts: Array,
   time: String,
+  website: String,
   reviews: [reviewSchema], // Add reviews to restaurant schema
 });
 
