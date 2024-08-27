@@ -68,6 +68,7 @@ const restaurantSchema = new mongoose.Schema({
   quickFacts: Array,
   time: String,
   website: String,
+  phone_number: String,
   reviews: [reviewSchema], // Add reviews to restaurant schema
 });
 
