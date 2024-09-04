@@ -10,9 +10,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-console.log("JWT_SECRET:", process.env.JWT_SECRET);
-console.log("MONGO_URI:", process.env.MONGO_URI);
-
 if (!process.env.JWT_SECRET) {
   throw new Error("JWT_SECRET environment variable is not set");
 }
@@ -57,6 +54,18 @@ const reviewSchema = new mongoose.Schema({
   date: { type: Date, default: Date.now },
 });
 
+const appFeedbackSchema = new mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  feedback: { type: String, required: true },
+  date: { type: Date, default: Date.now },
+});
+
+const restaurantFeedbackSchema = new mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  feedback: { type: String, required: true },
+  date: { type: Date, default: Date.now },
+});
+
 const restaurantSchema = new mongoose.Schema({
   name: String,
   address: String,
@@ -86,6 +95,12 @@ const Restaurant = mongoose.model(
   "Restaurants"
 );
 const Review = mongoose.model("Review", reviewSchema);
+const AppFeedback = mongoose.model("AppFeedback", appFeedbackSchema);
+const RestaurantFeedback = mongoose.model(
+  "RestaurantFeedback",
+  restaurantFeedbackSchema
+);
+
 const CategoryImage = mongoose.model(
   "CategoryImages",
   categoryImageSchema,
@@ -141,6 +156,32 @@ app.post("/register", async (req, res) => {
     res.status(201).json({ token });
   } catch (error) {
     console.error("Error registering user:", error);
+    res.status(500).json({ error: error.message, stack: error.stack });
+  }
+});
+
+app.post("/postAppFeedback", async (req, res) => {
+  const { user, feedback } = req.body;
+  console.log(req.body);
+  try {
+    const appFeedback = new AppFeedback({ user, feedback });
+    await appFeedback.save();
+    res.status(201).json({ message: "Feedback submitted successfully" });
+  } catch (error) {
+    console.error("Error sending feedback:", error);
+    res.status(500).json({ error: error.message, stack: error.stack });
+  }
+});
+
+app.post("/postRestaurantFeedback", async (req, res) => {
+  const { user, feedback } = req.body;
+  console.log(req.body);
+  try {
+    const restaurantFeedback = new RestaurantFeedback({ user, feedback });
+    await restaurantFeedback.save();
+    res.status(201).json({ message: "Feedback submitted successfully" });
+  } catch (error) {
+    console.error("Error sending feedback:", error);
     res.status(500).json({ error: error.message, stack: error.stack });
   }
 });
