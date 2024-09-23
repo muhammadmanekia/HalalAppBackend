@@ -52,12 +52,16 @@ const credentials = { key: privateKey, cert: certificate, ca };
 const PORT = process.env.PORT || 4000;
 
 // Use HTTP for local development and HTTPS for production
-if (process.env.NODE_ENV === "production") {
-  https.createServer(credentials, app).listen(PORT, () => {
-    console.log(`Secure server running on port ${PORT}`);
-  });
-} else {
-  http.createServer(app).listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-}
+// if (process.env.NODE_ENV === "production") {
+//   https.createServer(credentials, app).listen(PORT, () => {
+//     console.log(`Secure server running on port ${PORT}`);
+//   });
+// } else {
+//   http.createServer(app).listen(PORT, () => {
+//     console.log(`Server running on port ${PORT}`);
+//   });
+// }
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
