@@ -44,10 +44,10 @@ app.use("/restaurants", restaurantRoutes);
 app.use("/category-images", categoryRoutes);
 
 // HTTPS server setup
-const privateKey = fs.readFileSync("ssl/privateKey.pem", "utf8");
-const certificate = fs.readFileSync("ssl/certificate.pem", "utf8");
-const ca = fs.readFileSync("ssl/ca.pem", "utf8");
-const credentials = { key: privateKey, cert: certificate, ca };
+// const privateKey = fs.readFileSync("ssl/privateKey.pem", "utf8");
+// const certificate = fs.readFileSync("ssl/certificate.pem", "utf8");
+// const ca = fs.readFileSync("ssl/ca.pem", "utf8");
+// const credentials = { key: privateKey, cert: certificate, ca };
 
 const PORT = process.env.PORT || 4000;
 
