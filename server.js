@@ -1,11 +1,5 @@
 const express = require("express");
-const mongoose = require("mongoose");
 const cors = require("cors");
-const jwt = require("jsonwebtoken");
-const crypto = require("crypto");
-const fs = require("fs");
-const https = require("https");
-const http = require("http");
 const compression = require("compression");
 
 require("dotenv").config();
@@ -43,24 +37,7 @@ app.use("/feedback", feedbackRoutes);
 app.use("/restaurants", restaurantRoutes);
 app.use("/category-images", categoryRoutes);
 
-// HTTPS server setup
-// const privateKey = fs.readFileSync("ssl/privateKey.pem", "utf8");
-// const certificate = fs.readFileSync("ssl/certificate.pem", "utf8");
-// const ca = fs.readFileSync("ssl/ca.pem", "utf8");
-// const credentials = { key: privateKey, cert: certificate, ca };
-
 const PORT = process.env.PORT || 4000;
-
-// Use HTTP for local development and HTTPS for production
-// if (process.env.NODE_ENV === "production") {
-//   https.createServer(credentials, app).listen(PORT, () => {
-//     console.log(`Secure server running on port ${PORT}`);
-//   });
-// } else {
-//   http.createServer(app).listen(PORT, () => {
-//     console.log(`Server running on port ${PORT}`);
-//   });
-// }
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
