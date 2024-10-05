@@ -12,6 +12,7 @@ const feedbackRoutes = require("./routes/feedbackRoutes");
 const restaurantRoutes = require("./routes/restaurantRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const rateLimiter = require("./middlewares/rateLimiter");
+const { encryptData, decryptData } = require("./utils/encryptionUtils");
 
 const app = express();
 app.use(cors());
@@ -39,6 +40,19 @@ app.use("/feedback", feedbackRoutes);
 app.use("/restaurants", restaurantRoutes);
 app.use("/groceries", groceryRoutes);
 app.use("/category-images", categoryRoutes);
+
+const encryptedData = encryptData(
+  { latitude: 40.7128, longitude: -74.006 },
+  secretKey
+);
+console.log("Encrypted Data:", encryptedData);
+
+const decryptedQuery = decryptData(encryptedData, secretKey) || {};
+const { latitude, longitude } = decryptedQuery;
+if (!latitude || !longitude) {
+  console.error("Decryption failed or missing latitude/longitude");
+  return res.status(400).json({ error: "Invalid or corrupted data" });
+}
 
 const PORT = process.env.PORT || 4000;
 
