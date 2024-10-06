@@ -41,19 +41,6 @@ app.use("/restaurants", restaurantRoutes);
 app.use("/groceries", groceryRoutes);
 app.use("/category-images", categoryRoutes);
 
-const encryptedData = encryptData(
-  { latitude: 40.7128, longitude: -74.006 },
-  secretKey
-);
-console.log("Encrypted Data:", encryptedData);
-
-const decryptedQuery = decryptData(encryptedData, secretKey) || {};
-const { latitude, longitude } = decryptedQuery;
-if (!latitude || !longitude) {
-  console.error("Decryption failed or missing latitude/longitude");
-  return res.status(400).json({ error: "Invalid or corrupted data" });
-}
-
 const PORT = process.env.PORT || 4000;
 
 app.listen(PORT, () => {
