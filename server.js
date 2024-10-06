@@ -12,7 +12,6 @@ const feedbackRoutes = require("./routes/feedbackRoutes");
 const restaurantRoutes = require("./routes/restaurantRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const rateLimiter = require("./middlewares/rateLimiter");
-const { encryptData, decryptData } = require("./utils/encryptionUtils");
 
 const app = express();
 app.use(cors());
