@@ -5,6 +5,8 @@ exports.encryptData = (data, secretKey) => {
 };
 
 exports.decryptData = (encryptedData, secretKey) => {
-  const bytes = cryptoJS.AES.decrypt(encryptedData, secretKey);
-  return JSON.parse(bytes.toString(cryptoJS.enc.Utf8));
+  if (encryptedData) {
+    const bytes = cryptoJS.AES.decrypt(encryptedData, secretKey);
+    return JSON.parse(bytes.toString(cryptoJS.enc.Utf8));
+  }
 };
