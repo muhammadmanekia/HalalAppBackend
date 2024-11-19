@@ -6,10 +6,9 @@ const feedbackSchema = new mongoose.Schema({
   restaurantId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Restaurants",
-    required: true,
   },
-  restaurantName: { type: String, required: true },
-  restaurantAddress: { type: String, required: true },
+  restaurantName: { type: String },
+  restaurantAddress: { type: String },
   date: { type: Date, default: Date.now },
 });
 
