@@ -9,6 +9,7 @@ const connectDB = require("./config/db"); // Database connection
 const authRoutes = require("./routes/authRoutes");
 const groceryRoutes = require("./routes/groceryRoutes");
 const feedbackRoutes = require("./routes/feedbackRoutes");
+const recommendationRoutes = require("./routes/recommendationRoutes");
 const adsRoutes = require("./routes/adsRoutes");
 const restaurantRoutes = require("./routes/restaurantRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
@@ -41,6 +42,7 @@ app.use("/restaurants", restaurantRoutes);
 app.use("/groceries", groceryRoutes);
 app.use("/category-images", categoryRoutes);
 app.use("/ads", adsRoutes);
+app.use("/recommendation", recommendationRoutes);
 
 const PORT = process.env.PORT || 4000;
 

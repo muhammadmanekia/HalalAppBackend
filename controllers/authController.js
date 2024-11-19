@@ -4,11 +4,21 @@ const jwt = require("jsonwebtoken");
 const sgMail = require("@sendgrid/mail");
 
 exports.register = async (req, res) => {
-  const { name, email, password } = req.body;
-
+  const { name, email, password, googleSignin } = req.body;
+  console.log(req.body);
   try {
-    const hashedPassword = hashPassword(password);
-    const user = new User({ name, email, password: hashedPassword });
+    let userFields = {
+      name,
+      email,
+    };
+    if (password) {
+      const hashedPassword = hashPassword(password);
+      userFields.password = hashedPassword;
+    }
+    if (googleSignin) {
+      userFields.googleSignIn = googleSignin;
+    }
+    const user = new User(userFields);
     await user.save();
 
     const token = jwt.sign(
@@ -18,6 +28,7 @@ exports.register = async (req, res) => {
 
     res.status(201).json({ token });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: error.message });
   }
 };

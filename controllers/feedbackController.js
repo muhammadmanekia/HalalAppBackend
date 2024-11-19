@@ -13,10 +13,17 @@ exports.postAppFeedback = async (req, res) => {
 };
 
 exports.postRestaurantFeedback = async (req, res) => {
-  const { user, feedback } = req.body;
+  const { user, feedback, restaurantId, restaurantName, restaurantAddress } =
+    req.body;
 
   try {
-    const restaurantFeedback = new RestaurantFeedback({ user, feedback });
+    const restaurantFeedback = new RestaurantFeedback({
+      user,
+      feedback,
+      restaurantId,
+      restaurantName,
+      restaurantAddress,
+    });
     await restaurantFeedback.save();
     res.status(201).json({ message: "Feedback submitted successfully" });
   } catch (error) {
