@@ -4,8 +4,7 @@ const jwt = require("jsonwebtoken");
 const sgMail = require("@sendgrid/mail");
 
 exports.register = async (req, res) => {
-  const { name, email, password, googleSignin } = req.body;
-  console.log(req.body);
+  const { name, email, password, googleSignin, googleID } = req.body;
   try {
     let userFields = {
       name,
@@ -17,6 +16,7 @@ exports.register = async (req, res) => {
     }
     if (googleSignin) {
       userFields.googleSignIn = googleSignin;
+      userFields.googleID = googleID;
     }
     const user = new User(userFields);
     await user.save();
@@ -29,6 +29,45 @@ exports.register = async (req, res) => {
     res.status(201).json({ token });
   } catch (error) {
     console.log(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.checkEmail = async (req, res) => {
+  const { email } = req.query;
+  console.log("email", email);
+
+  try {
+    const user = await User.findOne({ email }); // Query the database
+    if (user) {
+      return res.json({ exists: true }); // Email exists
+    }
+    return res.json({ exists: false }); // Email does not exist
+  } catch (error) {
+    return res.status(500).json({ error: "Server error" }); // Handle errors
+  }
+};
+
+exports.googleLogin = async (req, res) => {
+  const { email, googleID } = req.body;
+  console.log(email, googleID);
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user)
+      return res.status(400).json({ error: "Invalid email or password" });
+
+    if (googleID != user.googleID)
+      return res.status(400).json({ error: "invalid email or password" });
+
+    const token = jwt.sign(
+      { id: user._id, name: user.name, email: user.email },
+      process.env.JWT_SECRET
+    );
+
+    res.json({ token });
+  } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };

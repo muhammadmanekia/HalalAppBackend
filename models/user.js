@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema({
   resetPasswordToken: String,
   resetPasswordExpires: Date,
   googleSignIn: Boolean,
+  googleID: String,
   date: { type: Date, default: Date.now },
 });
 
