@@ -8,6 +8,8 @@ const {
   verifyResetCode,
   checkEmail,
   googleLogin,
+  updateFCMToken,
+  updateLocation,
 } = require("../controllers/authController");
 
 router.post("/register", register);
@@ -17,4 +19,7 @@ router.post("/google-login", googleLogin);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", verifyResetCode);
 router.delete("/delete/:userId", deleteAccount);
+router.post("/update-fcm-token", updateFCMToken);
+router.post("/update-location", updateLocation);
+
 module.exports = router;

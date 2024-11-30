@@ -206,3 +206,50 @@ exports.deleteAccount = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.updateFCMToken = async (req, res) => {
+  const { userId, fcmToken } = req.body;
+
+  console.log(userId, fcmToken);
+
+  try {
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { fcmToken: fcmToken },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({ message: "FCM token updated successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.updateLocation = async (req, res) => {
+  const { userId, location, city } = req.body;
+
+  try {
+    const user = await User.findByIdAndUpdate(
+      userId,
+      {
+        location: location,
+        city: city,
+      },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({ message: "Location updated successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.message });
+  }
+};
