@@ -10,7 +10,7 @@ exports.getRestaurants = async (req, res) => {
 
   try {
     const decryptedQuery = decryptData(encryptedQuery, process.env.SECRET_KEY);
-    const { latitude, longitude, radius = 20 } = decryptedQuery;
+    const { latitude, longitude, radius = 30 } = decryptedQuery;
 
     const allRestaurants = await Restaurant.find();
 
