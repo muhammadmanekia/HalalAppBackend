@@ -2,6 +2,7 @@ const User = require("../models/user");
 const { hashPassword, comparePassword } = require("../utils/passwordUtils");
 const jwt = require("jsonwebtoken");
 const sgMail = require("@sendgrid/mail");
+const Firebase = require("../models/firebase");
 
 exports.register = async (req, res) => {
   const { name, email, password, googleSignin, googleID } = req.body;
@@ -208,22 +209,25 @@ exports.deleteAccount = async (req, res) => {
 };
 
 exports.updateFCMToken = async (req, res) => {
-  const { userId, fcmToken } = req.body;
+  const { fcmToken, location } = req.body;
 
-  console.log(userId, fcmToken);
+  console.log(fcmToken);
 
   try {
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { fcmToken: fcmToken },
-      { new: true }
-    );
+    // Look for the fcmToken in the Firebase collection
+    let tokenEntry = await Firebase.findOne({ fcmToken: fcmToken });
 
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
+    if (tokenEntry) {
+      // If entry exists, update the location
+      tokenEntry.location = location;
+      await tokenEntry.save();
+      res.json({ message: "Location updated successfully" });
+    } else {
+      // If entry does not exist, create a new one
+      const newToken = new Firebase({ fcmToken: fcmToken, location: location });
+      await newToken.save();
+      res.json({ message: "New FCM token created successfully" });
     }
-
-    res.json({ message: "FCM token updated successfully" });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: error.message });
