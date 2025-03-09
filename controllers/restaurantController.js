@@ -4,6 +4,8 @@ const { calculateDistance } = require("../utils/calculateDistance");
 const mongoose = require("mongoose");
 const Reviews = require("../models/reviews");
 const crypto = require("crypto");
+const NodeCache = require("node-cache");
+const cache = new NodeCache({ stdTTL: 600, checkperiod: 120 }); // Cache expires in 10 mins
 
 exports.getRestaurants = async (req, res) => {
   const { encryptedQuery } = req.query;
@@ -11,6 +13,12 @@ exports.getRestaurants = async (req, res) => {
   try {
     const decryptedQuery = decryptData(encryptedQuery, process.env.SECRET_KEY);
     const { latitude, longitude, radius = 30 } = decryptedQuery;
+    const cacheKey = `restaurants:${latitude}:${longitude}:${radius}`;
+
+    const cachedData = cache.get(cacheKey);
+    if (cachedData) {
+      return res.json(cachedData);
+    }
 
     const allRestaurants = await Restaurant.find();
 
@@ -40,6 +48,7 @@ exports.getRestaurants = async (req, res) => {
         filteredRestaurants,
         process.env.SECRET_KEY
       );
+      cache.set(cacheKey, encryptedResponse, 600); // Cache for 10 minutes
 
       res.json(encryptedResponse);
     } else {
@@ -77,6 +86,7 @@ exports.postReview = async (req, res) => {
     });
 
     await review.save(); // Save the review to the 'Reviews' collection
+
     res.status(201).json(review); // Send the saved review as the response
   } catch (error) {
     console.error("Error posting review:", error);
@@ -86,6 +96,7 @@ exports.postReview = async (req, res) => {
 
 exports.getReview = async (req, res) => {
   const { restaurantId } = req.params; // Assuming restaurantId is passed as a URL parameter
+
   try {
     const reviews = await Reviews.find({
       restaurant_id: new mongoose.Types.ObjectId(`${restaurantId}`),
@@ -97,7 +108,7 @@ exports.getReview = async (req, res) => {
         .json({ error: "No reviews found for this restaurant." });
     }
 
-    res.json(reviews); // Return the list of reviews for the restaurant
+    res.json(reviews);
   } catch (error) {
     console.error("Error fetching reviews:", error);
     res.status(500).json({ error: error.message });
