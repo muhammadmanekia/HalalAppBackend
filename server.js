@@ -16,6 +16,7 @@ const restaurantRoutes = require("./routes/restaurantRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const rateLimiter = require("./middlewares/rateLimiter");
 const menuRoutes = require("./routes/menuRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
 
 const app = express();
 app.use(cors());
@@ -47,6 +48,7 @@ app.use("/ads", adsRoutes);
 app.use("/recommendation", recommendationRoutes);
 app.use("/notification", notificationRoutes);
 app.use("/menu", menuRoutes);
+app.use("/create-payment-intent", paymentRoutes);
 
 const PORT = process.env.PORT || 4000;
 
