@@ -1,6 +1,6 @@
 const stripe = require("stripe")(process.env.STRIPE_API_KEY_TEST); // Replace with your Stripe secret key
 
-const PaymentInfo = require("../models/PaymentInfo"); // Import the PaymentInfo model
+const PaymentInfo = require("../models/paymentInfo"); // Import the PaymentInfo model
 
 exports.sendPayment = async (req, res) => {
   const { amount, cart } = req.body;
