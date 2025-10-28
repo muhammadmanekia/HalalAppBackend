@@ -38,7 +38,6 @@ app.use((req, res, next) => {
   }
 });
 
-<<<<<<< Updated upstream
 // Routes
 app.use("/auth", authRoutes);
 app.use("/feedback", feedbackRoutes);
