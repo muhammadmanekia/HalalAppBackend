@@ -2,7 +2,7 @@ const User = require("../models/user");
 const { hashPassword, comparePassword } = require("../utils/passwordUtils");
 const jwt = require("jsonwebtoken");
 const sgMail = require("@sendgrid/mail");
-const Firebase = require("../models/firebase");
+const mongoose = require("mongoose");
 
 exports.register = async (req, res) => {
   const { name, email, password, googleSignin, googleID } = req.body;
@@ -209,25 +209,33 @@ exports.deleteAccount = async (req, res) => {
 };
 
 exports.updateFCMToken = async (req, res) => {
-  const { fcmToken, location } = req.body;
+  const { userId, fcmToken, location } = req.body;
 
-  console.log(fcmToken);
+  console.log(userId);
+  // Validate userId
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return res.status(400).json({ error: "Invalid user ID format" });
+  }
 
   try {
-    // Look for the fcmToken in the Firebase collection
-    let tokenEntry = await Firebase.findOne({ fcmToken: fcmToken });
+    // Find the user by userId and update fcmToken and location
 
-    if (tokenEntry) {
-      // If entry exists, update the location
-      tokenEntry.location = location;
-      await tokenEntry.save();
-      res.json({ message: "Location updated successfully" });
-    } else {
-      // If entry does not exist, create a new one
-      const newToken = new Firebase({ fcmToken: fcmToken, location: location });
-      await newToken.save();
-      res.json({ message: "New FCM token created successfully" });
+    const coords = {
+      type: "Point",
+      coordinates: [location.longitude, location.latitude], // GeoJSON uses [lng, lat]
+    };
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { fcmToken: fcmToken, location: coords },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
     }
+
+    res.json({ message: "FCM token and location updated successfully" });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: error.message });
