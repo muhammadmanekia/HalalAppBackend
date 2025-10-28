@@ -1,18 +1,10 @@
 const mongoose = require("mongoose");
 
 const notificationSchema = new mongoose.Schema({
-  title: String,
-  body: String,
-  location: {
-    type: {
-      type: String,
-      enum: ["Point"],
-    },
-    coordinates: {
-      type: [Number],
-    },
-  },
+  message: String,
+  recipients: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   createdAt: { type: Date, default: Date.now },
+  isRead: { type: Boolean, default: false },
 });
 
 module.exports = mongoose.model(
