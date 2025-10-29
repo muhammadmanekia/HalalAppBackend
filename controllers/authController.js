@@ -2,13 +2,24 @@ const User = require("../models/user");
 const { hashPassword, comparePassword } = require("../utils/passwordUtils");
 const jwt = require("jsonwebtoken");
 const sgMail = require("@sendgrid/mail");
+const mongoose = require("mongoose");
 
 exports.register = async (req, res) => {
-  const { name, email, password } = req.body;
-
+  const { name, email, password, googleSignin, googleID } = req.body;
   try {
-    const hashedPassword = hashPassword(password);
-    const user = new User({ name, email, password: hashedPassword });
+    let userFields = {
+      name,
+      email,
+    };
+    if (password) {
+      const hashedPassword = hashPassword(password);
+      userFields.password = hashedPassword;
+    }
+    if (googleSignin) {
+      userFields.googleSignIn = googleSignin;
+      userFields.googleID = googleID;
+    }
+    const user = new User(userFields);
     await user.save();
 
     const token = jwt.sign(
@@ -17,6 +28,46 @@ exports.register = async (req, res) => {
     );
 
     res.status(201).json({ token });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.checkEmail = async (req, res) => {
+  const { email } = req.query;
+  console.log("email", email);
+
+  try {
+    const user = await User.findOne({ email }); // Query the database
+    if (user) {
+      return res.json({ exists: true }); // Email exists
+    }
+    return res.json({ exists: false }); // Email does not exist
+  } catch (error) {
+    return res.status(500).json({ error: "Server error" }); // Handle errors
+  }
+};
+
+exports.googleLogin = async (req, res) => {
+  const { email, googleID } = req.body;
+  console.log(email, googleID);
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user)
+      return res.status(400).json({ error: "Invalid email or password" });
+
+    if (googleID != user.googleID)
+      return res.status(400).json({ error: "invalid email or password" });
+
+    const token = jwt.sign(
+      { id: user._id, name: user.name, email: user.email },
+      process.env.JWT_SECRET
+    );
+
+    res.json({ token });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -153,6 +204,64 @@ exports.deleteAccount = async (req, res) => {
 
     res.json({ message: "Account deleted successfully" });
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.updateFCMToken = async (req, res) => {
+  const { userId, fcmToken, location } = req.body;
+
+  console.log(userId);
+  // Validate userId
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return res.status(400).json({ error: "Invalid user ID format" });
+  }
+
+  try {
+    // Find the user by userId and update fcmToken and location
+
+    const coords = {
+      type: "Point",
+      coordinates: [location.longitude, location.latitude], // GeoJSON uses [lng, lat]
+    };
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { fcmToken: fcmToken, location: coords },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({ message: "FCM token and location updated successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.updateLocation = async (req, res) => {
+  const { userId, location, city } = req.body;
+
+  try {
+    const user = await User.findByIdAndUpdate(
+      userId,
+      {
+        location: location,
+        city: city,
+      },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({ message: "Location updated successfully" });
+  } catch (error) {
+    console.log(error);
     res.status(500).json({ error: error.message });
   }
 };
