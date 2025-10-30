@@ -16,7 +16,7 @@ const restaurantRoutes = require("./routes/restaurantRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const rateLimiter = require("./middlewares/rateLimiter");
 const menuRoutes = require("./routes/menuRoutes");
-// const paymentRoutes = require("./routes/paymentRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
 
 const app = express();
 app.use(cors());
