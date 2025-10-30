@@ -5,7 +5,7 @@ const User = require("../models/user");
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(
-      require("../halalapp-458dc-firebase-adminsdk-1gfyg-10c34b45e2.json")
+      JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
     ),
   });
 }
