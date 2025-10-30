@@ -18,7 +18,11 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "express-rate-limit": "^7.4.0",
+    "firebase-admin": "^13.0.1",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.4.4"
+    "google-auth-library": "^9.15.0",
+    "mongoose": "^8.4.4",
+    "node-cache": "^5.1.2",
+    "stripe": "^18.1.0"
   }
 }
