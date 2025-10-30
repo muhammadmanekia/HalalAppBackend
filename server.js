@@ -48,7 +48,7 @@ app.use("/ads", adsRoutes);
 app.use("/recommendation", recommendationRoutes);
 app.use("/notification", notificationRoutes);
 app.use("/menu", menuRoutes);
-// app.use("/create-payment-intent", paymentRoutes);
+app.use("/create-payment-intent", paymentRoutes);
 
 const PORT = process.env.PORT || 4000;
 
